@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Mage Arena 🧙 | Random Subject Quest + Boss Battle</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        * {
+            user-select: none;
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: radial-gradient(circle at 20% 30%, #0a0f1e, #000);
+            color: white;
+            font-family: 'Press Start 2P', monospace;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .game-container { width: 100%; max-width: 1300px; margin: 0 auto; }
+        .hidden { display: none !important; }
+        
+        .pixel-btn {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.8rem;
+            padding: 12px 22px;
+            margin: 10px;
+            background: #2a1e3c;
+            border: 3px solid #ffaa66;
+            color: #ffdd99;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #3a2a4a;
+            transition: 0.05s linear;
+        }
+        .pixel-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #3a2a4a; }
+        .back-btn { background: #2a2a3c; border-color: #8888ff; }
+        .title { color: #ffcc44; text-shadow: 4px 4px 0 #aa3300; font-size: 1.6rem; margin-bottom: 20px; }
+        
+        #welcome {
+            background: linear-gradient(135deg, #0a0f1e, #1a0a2e);
+            border: 3px solid #ffaa44;
+            border-radius: 48px;
+            padding: 50px 30px;
+            animation: glow 2s infinite;
+        }
+        @keyframes glow { 0% { box-shadow: 0 0 20px rgba(255,100,0,0.3); } 50% { box-shadow: 0 0 55px rgba(255,100,0,0.6); } }
+        .floating-mage { font-size: 85px; animation: float 3s infinite; }
+        @keyframes float { 0% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        
+        /* CHARACTER SELECTION */
+        #characterSelect {
+            background: rgba(10,10,30,0.95);
+            border: 3px solid #f0a0ff;
+            border-radius: 48px;
+            padding: 35px 25px;
+            backdrop-filter: blur(6px);
+        }
+        .char-grid {
+            display: flex;
+            justify-content: center;
+            gap: 35px;
+            flex-wrap: wrap;
+            margin: 35px 0;
+        }
+        .char-card {
+            background: linear-gradient(145deg, #1a1f2e, #0f1220);
+            border: 3px solid #ffaa66;
+            border-radius: 40px;
+            padding: 28px 20px;
+            width: 260px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+        .char-card.selected {
+            border: 5px solid #ffdd44;
+            background: linear-gradient(145deg, #2a2f4e, #1a1f3a);
+            box-shadow: 0 0 30px #ffaa44;
+            transform: scale(1.03);
+        }
+        .char-emoji { font-size: 85px; filter: drop-shadow(2px 4px 8px black); margin-bottom: 15px; }
+        .char-name { font-size: 1.1rem; margin: 15px 0 8px; color: #ffdd99; font-weight: bold; }
+        .char-desc { font-size: 0.7rem; color: #aaaaff; background: rgba(0,0,0,0.5); padding: 8px; border-radius: 30px; margin-top: 8px; }
+        
+        /* SUBJECT SELECT (MULTIPLE) */
+        #subjectSelect {
+            background: rgba(10,10,30,0.95);
+            border: 3px solid #88aaff;
+            border-radius: 48px;
+            padding: 35px 25px;
+        }
+        .subject-grid {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin: 30px 0;
+        }
+        .subject-card {
+            background: #1a1f2e;
+            border: 3px solid #ffaa66;
+            border-radius: 40px;
+            padding: 25px;
+            width: 200px;
+            cursor: pointer;
+            transition: 0.1s;
+            text-align: center;
+        }
+        .subject-card.selected {
+            border: 4px solid #ffdd44;
+            background: #2a2f4e;
+            box-shadow: 0 0 25px gold;
+            transform: scale(1.02);
+        }
+        .subject-emoji { font-size: 65px; }
+        .subject-name { font-size: 1rem; margin-top: 12px; }
+        .locked-subject { opacity: 0.4; filter: grayscale(0.5); cursor: not-allowed; }
+        
+        /* ROADMAP (Boss Stages) */
+        #roadmap {
+            background: rgba(0,0,0,0.88);
+            border: 3px solid #f0a0ff;
+            border-radius: 48px;
+            padding: 25px;
+        }
+        .chapter-track {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+            margin: 30px 0;
+        }
+        .chapter-node {
+            background: linear-gradient(145deg, #232838, #121724);
+            border: 2px solid #ffaa66;
+            border-radius: 60px;
+            width: 92%;
+            max-width: 650px;
+            padding: 18px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .chapter-node.locked { opacity: 0.5; filter: grayscale(0.3); cursor: not-allowed; border-color: #666; }
+        .chapter-node.completed { border-color: #44ff88; background: #1a3a2a; box-shadow: 0 0 12px #44ff88; }
+        .boss-node { background: linear-gradient(145deg, #5a1a1a, #2a0505); border-color: #ff4444; }
+        .chapter-icon { font-size: 2.4rem; margin-right: 18px; }
+        .chapter-info { flex: 1; text-align: left; }
+        .chapter-title { font-size: 0.85rem; margin-bottom: 6px; color: #ffdd99; }
+        .chapter-stats { font-size: 0.55rem; color: #aaaaff; }
+        
+        /* FIGHT SCREEN */
+        #fight {
+            background: #0b0e14;
+            border-radius: 32px;
+            border: 2px solid #ff9933;
+            overflow: hidden;
+        }
+        .hud { display: flex; justify-content: space-between; background: #1a1f2a; padding: 15px; border-bottom: 3px solid #ffaa55; }
+        .hpBox { width: 30%; text-align: left; font-size: 0.7rem; }
+        .hpBar { width: 100%; height: 16px; background: #5a1e1e; border: 2px solid white; margin-top: 5px; }
+        #pBar, #mBar { width: 100%; height: 100%; background: #4aff6e; transition: width 0.2s; }
+        .arena { position: relative; display: flex; justify-content: space-between; align-items: center; padding: 30px 60px; min-height: 320px; background: linear-gradient(145deg, #1e2a2a, #0a121c); }
+        .fighter { font-size: 100px; filter: drop-shadow(0 8px 8px black); z-index: 5; }
+        .vs { font-size: 32px; background: #000000aa; padding: 10px 24px; border-radius: 70px; color: #ff5555; }
+        .panel { background: #141a24; padding: 25px; }
+        #question { font-size: 0.85rem; background: #00000099; display: inline-block; padding: 12px 24px; border-radius: 50px; margin-bottom: 20px; max-width: 90%; }
+        .fight-input { font-family: 'Press Start 2P', monospace; font-size: 0.9rem; padding: 12px; width: 240px; text-align: center; background: #222; border: 2px solid #ffaa66; color: #ffdd99; margin-right: 12px; }
+        .attack-btn { background: #aa2e1e; border-color: #ff6644; }
+        #msg { margin-top: 18px; font-size: 0.7rem; background: #0f0f1c; padding: 10px; border-radius: 28px; }
+        .fireball { position: absolute; font-size: 55px; pointer-events: none; z-index: 99; }
+        .impact-burst { position: absolute; font-size: 60px; pointer-events: none; animation: pop 0.3s forwards; }
+        @keyframes pop { 0% { transform: scale(0.3); opacity: 1; } 100% { transform: scale(2); opacity: 0; } }
+        .hitShake { animation: shake 0.2s 3; }
+        .playerHitShake { animation: shakeP 0.2s 3; }
+        @keyframes shake { 0% { transform: translateX(0px); } 25% { transform: translateX(-12px); } 75% { transform: translateX(10px); } }
+        @keyframes shakeP { 0% { transform: translateX(0px); } 25% { transform: translateX(14px); } 75% { transform: translateX(-8px); } }
+        .castGlow { animation: flash 0.2s 2; }
+        @keyframes flash { 50% { filter: brightness(1.8); text-shadow: 0 0 20px orange; } }
+        .name-input { font-family: 'Press Start 2P', monospace; font-size: 1rem; padding: 14px 24px; width: 320px; text-align: center; background: #222; border: 3px solid #ffaa66; color: #ffdd99; border-radius: 60px; margin: 15px 0; }
+        
+        @media (max-width: 750px) {
+            .char-card, .subject-card { width: 200px; padding: 15px; }
+            .char-emoji, .subject-emoji { font-size: 55px; }
+            .fighter { font-size: 70px; }
+        }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <!-- WELCOME -->
+    <div id="welcome">
+        <div class="floating-mage">🧙‍♂️</div>
+        <h1 class="title">⚡ MAGE ARENA ⚡</h1>
+        <div class="title-sub" style="font-size:0.65rem; margin-bottom:20px;">RANDOM SUBJECTS • BOSS BATTLES • KNOWLEDGE WARRIOR</div>
+        <button class="pixel-btn welcome-btn" id="startBtn" style="font-size:1.2rem; padding:16px 32px;">🔥 START ADVENTURE 🔥</button>
+    </div>
+
+    <!-- CHARACTER + NAME -->
+    <div id="characterSelect" class="hidden">
+        <h2 style="font-size:1.3rem;">📜 CHOOSE YOUR MAGE 📜</h2>
+        <input type="text" id="playerName" class="name-input" placeholder="MAGE NAME" maxlength="16">
+        <div class="char-grid">
+            <div class="char-card" data-char="pyro">
+                <div class="char-emoji">🔥🧙‍♂️</div>
+                <div class="char-name">PYROMANCER</div>
+                <div class="char-desc">🔥 +5 DAMAGE 🔥</div>
+            </div>
+            <div class="char-card" data-char="cryo">
+                <div class="char-emoji">❄️🧙‍♀️</div>
+                <div class="char-name">CRYOMANCER</div>
+                <div class="char-desc">❄️ -20% ENEMY DMG ❄️</div>
+            </div>
+            <div class="char-card" data-char="arcane">
+                <div class="char-emoji">✨🧙‍♂️</div>
+                <div class="char-name">ARCANE SAGE</div>
+                <div class="char-desc">✨ +10 MAX HP ✨</div>
+            </div>
+        </div>
+        <div id="charError" style="color:#ff8866; font-size:0.7rem;"></div>
+        <button class="pixel-btn" id="confirmCharBtn">✅ CONFIRM & CONTINUE</button>
+        <button class="pixel-btn back-btn" id="backToWelcomeBtn">← BACK</button>
+    </div>
+
+    <!-- SUBJECT SELECTION (Math, Science, English, Malay) -->
+    <div id="subjectSelect" class="hidden">
+        <h2 style="font-size:1.2rem;">📚 PICK YOUR TRIAL SUBJECT</h2>
+        <div class="subject-grid" id="subjectGrid">
+            <div class="subject-card" data-subject="maths">
+                <div class="subject-emoji">🔢🧮</div>
+                <div class="subject-name">MATHEMATICS</div>
+                <div style="font-size:0.55rem;">Numbers & logic</div>
+            </div>
+            <div class="subject-card" data-subject="science">
+                <div class="subject-emoji">🔬⚛️</div>
+                <div class="subject-name">SCIENCE</div>
+                <div style="font-size:0.55rem;">Biology, Physics, Chemistry</div>
+            </div>
+            <div class="subject-card" data-subject="english">
+                <div class="subject-emoji">📖✍️</div>
+                <div class="subject-name">ENGLISH</div>
+                <div style="font-size:0.55rem;">Grammar & Vocabulary</div>
+            </div>
+            <div class="subject-card" data-subject="malay">
+                <div class="subject-emoji">🇲🇾🖋️</div>
+                <div class="subject-name">BAHASA MELAYU</div>
+                <div style="font-size:0.55rem;">Tatabahasa & Peribahasa</div>
+            </div>
+        </div>
+        <div id="subjectInfo" style="font-size:0.65rem; color:#aaffdd; margin:10px;">Setiap subjek mempunyai 4 cabaran + BOSS akhir!</div>
+        <button class="pixel-btn" id="confirmSubjectBtn">⚔️ ENTER THE ROADMAP ⚔️</button>
+        <button class="pixel-btn back-btn" id="backToCharFromSubBtn">← BACK</button>
+    </div>
+
+    <!-- ROADMAP (Stages) -->
+    <div id="roadmap" class="hidden">
+        <h2 style="font-size:1.1rem;">🗺️ <span id="roadmapSubjectName">SUBJECT</span> : CHALLENGES</h2>
+        <div class="chapter-track" id="chapterTrack"></div>
+        <div style="margin-top: 25px;">
+            <button class="pixel-btn" id="resetRoadmapBtn">🔄 RESET PROGRESS</button>
+            <button class="pixel-btn back-btn" id="exitRoadmapBtn">🏠 MAIN MENU</button>
+        </div>
+    </div>
+
+    <!-- FIGHT ARENA -->
+    <div id="fight" class="hidden">
+        <div class="hud">
+            <div class="hpBox"><div id="playerNameHUD">🧙 MAGE</div><div class="hpBar"><div id="pBar"></div></div><div id="pHP">100</div></div>
+            <div class="timer">⚡ BATTLE</div>
+            <div class="hpBox"><div id="bossName">ENEMY</div><div class="hpBar"><div id="mBar"></div></div><div id="mHP">100</div></div>
+        </div>
+        <div class="arena"><div id="player" class="fighter">🧙‍♂️</div><div class="vs">VS</div><div id="monster" class="fighter">👹</div></div>
+        <div class="panel">
+            <h2 id="question">⚔️ RANDOM QUESTION</h2>
+            <input type="text" id="answer" class="fight-input" placeholder="YOUR ANSWER" autocomplete="off">
+            <button class="pixel-btn attack-btn" id="attackBtn">✨ CAST SPELL ✨</button>
+            <p id="msg">Answer correctly to strike the enemy!</p>
+        </div>
+        <button class="pixel-btn back-btn" id="fightExitBtn">🚪 EXIT TO ROADMAP</button>
+    </div>
+</div>
+
+<script>
+    // ======================= RANDOM QUESTION BANKS (4 SUBJECTS) =======================
+    const banks = {
+        maths: {
+            stages: [
+                { name: "🔢 NUMBERS & OPERATIONS", questions: [
+                    { q: "125 × 8 = ?", a: "1000" }, { q: "144 ÷ 12 = ?", a: "12" }, { q: "25% of 200 = ?", a: "50" }, { q: "1.5 + 2.7 = ?", a: "4.2" }, { q: "3/4 + 1/2 = ? (fraction)", a: "5/4" }, { q: "What is the prime number between 10 and 20?", a: "11,13,17,19" }
+                ] },
+                { name: "📐 FRACTIONS & DECIMALS", questions: [
+                    { q: "0.75 × 0.4 = ?", a: "0.3" }, { q: "45% as a fraction in simplest form", a: "9/20" }, { q: "2.5 - 1.75 = ?", a: "0.75" }, { q: "5/8 ÷ 2 = ?", a: "5/16" }, { q: "Convert 3/5 to percentage", a: "60" }
+                ] },
+                { name: "💰 FINANCIAL MATH", questions: [
+                    { q: "Cost RM50, sell RM65. Profit?", a: "15" }, { q: "15% discount on RM80 = ?", a: "68" }, { q: "RM40 with RM5 rebate, pay?", a: "35" }, { q: "Loss RM7, cost RM55. Selling price?", a: "48" }
+                ] },
+                { name: "📊 DATA & PROBABILITY", questions: [
+                    { q: "Probability of rain 0.7, no rain?", a: "0.3" }, { q: "Mean of 4,8,12,16", a: "10" }, { q: "90° in a pie chart represents ?%", a: "25" }
+                ] }
+            ],
+            boss: [
+                { q: "(15 + 6) × 2 - 8 = ?", a: "34" }, { q: "20% of a number is 40, find the number.", a: "200" }, { q: "Area of rectangle 8m x 5m", a: "40" }, { q: "Simplify ratio 8:12", a: "2:3" }, { q: "3 hours 45 min = ? minutes", a: "225" }
+            ]
+        },
+        science: {
+            stages: [
+                { name: "🔬 BIOLOGY BASICS", questions: [
+                    { q: "What gas do plants absorb for photosynthesis?", a: "carbon dioxide" }, { q: "The hardest natural substance?", a: "diamond" }, { q: "Which organ pumps blood?", a: "heart" }, { q: "Green pigment in plants?", a: "chlorophyll" }
+                ] },
+                { name: "⚛️ CHEMISTRY & MATTER", questions: [
+                    { q: "H2O is commonly known as?", a: "water" }, { q: "What is the pH of pure water?", a: "7" }, { q: "Gas needed for burning?", a: "oxygen" }, { q: "Solid to gas directly is called?", a: "sublimation" }
+                ] },
+                { name: "🌍 PHYSICS & FORCES", questions: [
+                    { q: "Unit of force?", a: "newton" }, { q: "What planet is known as Red Planet?", a: "mars" }, { q: "Speed = distance / ?", a: "time" }, { q: "What reflects light to allow sight?", a: "mirror" }
+                ] },
+                { name: "🔭 SPACE & EARTH", questions: [
+                    { q: "Closest star to Earth?", a: "sun" }, { q: "Planet with the most moons?", a: "saturn" }, { q: "Layer of air surrounding Earth?", a: "atmosphere" }
+                ] }
+            ],
+            boss: [
+                { q: "What is the boiling point of water in °C?", a: "100" }, { q: "Which vitamin is produced by sunlight?", a: "vitamin d" }, { q: "What is the center of an atom called?", a: "nucleus" }, { q: "Newton's first law is also known as?", a: "inertia" }
+            ]
+        },
+        english: {
+            stages: [
+                { name: "📖 GRAMMAR BASICS", questions: [
+                    { q: "Past tense of 'go'?", a: "went" }, { q: "Plural of 'child'?", a: "children" }, { q: "Synonym for 'happy'?", a: "joyful" }, { q: "Antonym of 'dark'?", a: "light" }
+                ] },
+                { name: "✍️ VOCABULARY", questions: [
+                    { q: "What means 'very large'?", a: "enormous" }, { q: "Another word for 'quick'?", a: "fast" }, { q: "Opposite of 'ancient'?", a: "modern" }
+                ] },
+                { name: "📝 SENTENCE STRUCTURE", questions: [
+                    { q: "Identify noun in 'The cat sleeps.'", a: "cat" }, { q: "Which word is a verb? (run / beautiful)", a: "run" }, { q: "Correct spelling: recieve or receive?", a: "receive" }
+                ] },
+                { name: "📚 COMPREHENSION", questions: [
+                    { q: "What is the main idea of a paragraph called?", a: "topic sentence" }, { q: "What do you call a person who writes books?", a: "author" }
+                ] }
+            ],
+            boss: [
+                { q: "What is the plural of 'analysis'?", a: "analyses" }, { q: "Synonym for 'brave'?", a: "courageous" }, { q: "What type of word describes a noun?", a: "adjective" }
+            ]
+        },
+        malay: {
+            stages: [
+                { name: "🇲🇾 TATABAHASA", questions: [
+                    { q: "Maksud 'Selamat Pagi' dalam English?", a: "good morning" }, { q: "Kata ganda untuk 'laki'?", a: "lelaki" }, { q: "Ayat pasif bagi 'Ali makan nasi'?", a: "nasi dimakan oleh ali" }
+                ] },
+                { name: "📖 PERIBAHASA", questions: [
+                    { q: "Bagai aur dengan tebing membawa maksud?", a: "kerjasama" }, { q: "Habis madu sepah dibuang. Maksud?", a: "dibuang selepas guna" }, { q: "Sepandai-pandai tupai melompat, akhirnya...", a: "jatuh juga" }
+                ] },
+                { name: "✍️ KATA KERJA & KATA SIFAT", questions: [
+                    { q: "Kata kerja bagi 'makan' masa lampau?", a: "makan" }, { q: "Warna biru dalam Bahasa Inggeris?", a: "blue" }, { q: "Nombor '8' dalam Bahasa Melayu?", a: "lapan" }
+                ] },
+                { name: "🖋️ PENULISAN", questions: [
+                    { q: "Apa maksud 'terima kasih'?", a: "thank you" }, { q: "Haiwan 'cat' dalam Bahasa Melayu?", a: "kucing" }, { q: "Bulan 'December' dalam BM?", a: "disember" }
+                ] }
+            ],
+            boss: [
+                { q: "Peribahasa 'Bagai enau dalam belukar' melepaskan pucuk masing-masing?", a: "berdiri sendiri" }, { q: "Kata kerja transitif bagi 'baca'?", a: "membaca" }, { q: "Maksud 'Cempedak di luar pagar'?", a: "buah jatuh ke tanah orang" }
+            ]
+        }
+    };
+
+    let currentSubject = "maths";
+    let selectedCharacter = "pyro";
+    let playerName = "MAGE";
+    let playerDamageBonus = 0;
+    let enemyDamageReduction = 1.0;
+    let playerHP = 100, monsterHP = 100, currentEnemyBase = 100;
+    let canAttack = true;
+    let currentQuestionObj = null;
+    let currentStageIndex = 0;
+    let currentStageQuestions = [];
+    let currentQIndex = 0;
+    let isBossFight = false;
+    
+    let progress = JSON.parse(localStorage.getItem("mageArenaProgress")) || {};
+
+    function getSubjectProgress() {
+        if (!progress[currentSubject]) progress[currentSubject] = { completedStages: [], bossDefeated: false };
+        return progress[currentSubject];
+    }
+
+    function saveProgress() { localStorage.setItem("mageArenaProgress", JSON.stringify(progress)); }
+
+    // UI elements
+    const welcomeDiv = document.getElementById('welcome');
+    const charDiv = document.getElementById('characterSelect');
+    const subjectDiv = document.getElementById('subjectSelect');
+    const roadmapDiv = document.getElementById('roadmap');
+    const fightDiv = document.getElementById('fight');
+    const chapterTrack = document.getElementById('chapterTrack');
+    const roadmapSubjectSpan = document.getElementById('roadmapSubjectName');
+    const playerEl = document.getElementById('player');
+    const monsterEl = document.getElementById('monster');
+    const bossNameSpan = document.getElementById('bossName');
+    const playerNameHUD = document.getElementById('playerNameHUD');
+    const questionEl = document.getElementById('question');
+    const answerInput = document.getElementById('answer');
+    const msgDiv = document.getElementById('msg');
+    const pHPspan = document.getElementById('pHP');
+    const mHPspan = document.getElementById('mHP');
+    const pBar = document.getElementById('pBar');
+    const mBar = document.getElementById('mBar');
+
+    function updateUI() {
+        pHPspan.innerText = Math.max(0, playerHP);
+        mHPspan.innerText = Math.max(0, monsterHP);
+        let pPercent = (playerHP / 100) * 100;
+        let mPercent = (monsterHP / currentEnemyBase) * 100;
+        pBar.style.width = Math.max(0, pPercent) + "%";
+        mBar.style.width = Math.max(0, mPercent) + "%";
+    }
+
+    function applyBonuses() {
+        if (selectedCharacter === 'pyro') playerDamageBonus = 6;
+        else if (selectedCharacter === 'cryo') enemyDamageReduction = 0.8;
+        else if (selectedCharacter === 'arcane') playerDamageBonus = 3;
+    }
+
+    function setPlayerVisual() {
+        if (selectedCharacter === 'pyro') playerEl.textContent = '🔥🧙‍♂️';
+        else if (selectedCharacter === 'cryo') playerEl.textContent = '❄️🧙‍♀️';
+        else playerEl.textContent = '✨🧙‍♂️';
+    }
+
+    function renderRoadmap() {
+        const data = banks[currentSubject];
+        const subjProgress = getSubjectProgress();
+        chapterTrack.innerHTML = '';
+        data.stages.forEach((stage, idx) => {
+            const isCompleted = subjProgress.completedStages.includes(idx);
+            const isUnlocked = idx === 0 || subjProgress.completedStages.includes(idx-1);
+            const node = document.createElement('div');
+            node.className = `chapter-node ${isCompleted ? 'completed' : ''} ${!isUnlocked ? 'locked' : ''}`;
+            node.innerHTML = `<div class="chapter-icon">📘</div><div class="chapter-info"><div class="chapter-title">${stage.name}</div><div class="chapter-stats">${stage.questions.length} random questions each battle</div></div><div>${!isUnlocked ? '🔒' : (isCompleted ? '✅' : '⚔️')}</div>`;
+            if (isUnlocked && !isCompleted) node.addEventListener('click', () => startStageBattle(idx));
+            chapterTrack.appendChild(node);
+        });
+        const bossUnlocked = subjProgress.completedStages.length === data.stages.length;
+        const bossCompleted = subjProgress.bossDefeated;
+        const bossNode = document.createElement('div');
+        bossNode.className = `chapter-node boss-node ${bossCompleted ? 'completed' : ''} ${!bossUnlocked ? 'locked' : ''}`;
+        bossNode.innerHTML = `<div class="chapter-icon">🐉</div><div class="chapter-info"><div class="chapter-title">🐉 FINAL BOSS BATTLE 🐉</div><div class="chapter-stats">Ultimate exam-style questions</div></div><div>${!bossUnlocked ? '🔒' : (bossCompleted ? '🏆' : '🔥')}</div>`;
+        if (bossUnlocked && !bossCompleted) bossNode.addEventListener('click', () => startBossBattle());
+        chapterTrack.appendChild(bossNode);
+    }
+
+    function getRandomQuestions(arr, count=3) {
+        const shuffled = [...arr];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled.slice(0, count);
+    }
+
+    function startStageBattle(stageIdx) {
+        const stage = banks[currentSubject].stages[stageIdx];
+        currentStageQuestions = getRandomQuestions(stage.questions, 3);
+        currentQIndex = 0;
+        currentStageIndex = stageIdx;
+        isBossFight = false;
+        playerHP = (selectedCharacter === 'arcane') ? 110 : 100;
+        monsterHP = 75;
+        currentEnemyBase = 75;
+        applyBonuses();
+        updateUI();
+        bossNameSpan.innerHTML = `📘 ${stage.name}`;
+        monsterEl.textContent = stage.name.includes("BIOLOGY") ? "🧬👾" : "📖👹";
+        setPlayerVisual();
+        playerNameHUD.innerHTML = playerName;
+        roadmapDiv.classList.add("hidden");
+        fightDiv.classList.remove("hidden");
+        loadNextFightQuestion();
+    }
+
+    function startBossBattle() {
+        const data = banks[currentSubject];
+        currentStageQuestions = getRandomQuestions(data.boss, 5);
+        currentQIndex = 0;
+        isBossFight = true;
+        playerHP = (selectedCharacter === 'arcane') ? 120 : 100;
+        monsterHP = 150;
+        currentEnemyBase = 150;
+        applyBonuses();
+        updateUI();
+        bossNameSpan.innerHTML = `🐉 FINAL BOSS: ${currentSubject.toUpperCase()} 🐉`;
+        monsterEl.textContent = "🐉🔥";
+        setPlayerVisual();
+        playerNameHUD.innerHTML = playerName;
+        roadmapDiv.classList.add("hidden");
+        fightDiv.classList.remove("hidden");
+        loadNextFightQuestion();
+    }
+
+    function loadNextFightQuestion() {
+        if (currentQIndex >= currentStageQuestions.length) {
+            finishVictory();
+            return;
+        }
+        currentQuestionObj = currentStageQuestions[currentQIndex];
+        questionEl.innerText = `✨ ${currentQuestionObj.q}`;
+        answerInput.value = "";
+        msgDiv.innerText = `Question ${currentQIndex+1}/${currentStageQuestions.length}`;
+        canAttack = true;
+        answerInput.focus();
+    }
+
+    function finishVictory() {
+        const subjProgress = getSubjectProgress();
+        if (isBossFight) {
+            if (!subjProgress.bossDefeated) {
+                subjProgress.bossDefeated = true;
+                saveProgress();
+                msgDiv.innerText = "🏆🌟 YOU DEFEATED THE BOSS! LEGENDARY! 🌟🏆";
+            }
+        } else {
+            if (!subjProgress.completedStages.includes(currentStageIndex)) {
+                subjProgress.completedStages.push(currentStageIndex);
+                saveProgress();
+                msgDiv.innerText = `✅ STAGE COMPLETED!`;
+            }
+        }
+        renderRoadmap();
+        setTimeout(() => { fightDiv.classList.add("hidden"); roadmapDiv.classList.remove("hidden"); }, 2000);
+        canAttack = false;
+    }
+
+    function gameOver() {
+        msgDiv.innerText = "💀 GAME OVER... RETURN TO ROADMAP 💀";
+        setTimeout(() => { fightDiv.classList.add("hidden"); roadmapDiv.classList.remove("hidden"); }, 2000);
+        canAttack = false;
+    }
+
+    // VISUAL & ATTACK
+    function launchFireball() { /* same effect */ const arena=document.querySelector('.arena'); if(!arena)return; const pRect=playerEl.getBoundingClientRect(), aRect=arena.getBoundingClientRect(), mRect=monsterEl.getBoundingClientRect(); let startX=(pRect.left+pRect.width/2)-aRect.left, endX=(mRect.left+mRect.width/2)-aRect.left, startY=(pRect.top+pRect.height/2)-aRect.top; const fb=document.createElement('div'); fb.className='fireball'; fb.textContent='🔥'; fb.style.left=startX-35+'px'; fb.style.top=startY-35+'px'; arena.appendChild(fb); const key=`fb_${Date.now()}`; const style=document.createElement('style'); style.textContent=`@keyframes ${key}{0%{left:${startX-35}px;transform:scale(0.6)}40%{transform:scale(1.3)}85%{left:${endX-35}px}100%{left:${endX-35}px;opacity:0}}`; document.head.appendChild(style); fb.style.animation=`${key} 0.4s forwards`; setTimeout(()=>{fb.remove();style.remove();},450); }
+    function impact(){ const arena=document.querySelector('.arena'); const rect=monsterEl.getBoundingClientRect(); const aRect=arena.getBoundingClientRect(); const burst=document.createElement('div'); burst.className='impact-burst'; burst.textContent='💥'; burst.style.left=((rect.left+rect.width/2)-aRect.left-35)+'px'; burst.style.top=((rect.top+rect.height/2)-aRect.top-35)+'px'; arena.appendChild(burst); setTimeout(()=>burst.remove(),250); }
+    function monsterHit(){ monsterEl.classList.add('hitShake'); setTimeout(()=>monsterEl.classList.remove('hitShake'),300); monsterEl.style.filter='drop-shadow(0 0 8px red)'; setTimeout(()=>monsterEl.style.filter='',150); }
+    function wizardHit(){ playerEl.classList.add('playerHitShake'); setTimeout(()=>playerEl.classList.remove('playerHitShake'),300); playerEl.style.filter='drop-shadow(0 0 6px #ff5555)'; setTimeout(()=>playerEl.style.filter='',150); }
+    function castGlow(){ playerEl.classList.add('castGlow'); setTimeout(()=>playerEl.classList.remove('castGlow'),200); }
+    
+    async function attack() {
+        if (!canAttack) return;
+        let answer = answerInput.value.trim().toLowerCase();
+        if (answer === "") { msgDiv.innerText = "❓ Enter answer!"; return; }
+        canAttack = false;
+        const correctAns = currentQuestionObj.a.toLowerCase();
+        const isCorrect = answer === correctAns || (!isNaN(parseFloat(answer)) && parseFloat(answer).toString() === correctAns);
+        if (isCorrect) {
+            castGlow(); launchFireball();
+            setTimeout(() => {
+                let dmg = 18 + playerDamageBonus;
+                monsterHP = Math.max(0, monsterHP - dmg);
+                updateUI(); monsterHit(); impact();
+                msgDiv.innerText = `🔥 CORRECT! -${dmg} DAMAGE!`;
+                if (monsterHP <= 0) { currentQIndex++; loadNextFightQuestion(); canAttack=true; }
+                else { currentQIndex++; loadNextFightQuestion(); canAttack=true; }
+            }, 320);
+        } else {
+            wizardHit();
+            let dmg = Math.floor(12 * enemyDamageReduction);
+            playerHP = Math.max(0, playerHP - dmg);
+            updateUI();
+            msgDiv.innerText = `❌ WRONG! ENEMY ATTACKS! -${dmg} HP`;
+            if (playerHP <= 0) gameOver();
+            else { currentQIndex++; loadNextFightQuestion(); canAttack=true; }
+        }
+    }
+
+    // UI Flow
+    let selectedSubjectCard = null;
+    document.getElementById('startBtn').onclick = () => { welcomeDiv.classList.add('hidden'); charDiv.classList.remove('hidden'); };
+    document.getElementById('backToWelcomeBtn').onclick = () => { charDiv.classList.add('hidden'); welcomeDiv.classList.remove('hidden'); };
+    document.getElementById('confirmCharBtn').onclick = () => {
+        let name = document.getElementById('playerName').value.trim();
+        if (!name) { document.getElementById('charError').innerText = "Enter mage name!"; return; }
+        playerName = name.slice(0,16);
+        const selected = document.querySelector('.char-card.selected');
+        if (selected) selectedCharacter = selected.getAttribute('data-char');
+        charDiv.classList.add('hidden');
+        subjectDiv.classList.remove('hidden');
+    };
+    document.querySelectorAll('.subject-card').forEach(card => {
+        card.addEventListener('click', () => {
+            document.querySelectorAll('.subject-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            selectedSubjectCard = card.getAttribute('data-subject');
+        });
+    });
+    document.querySelector('.subject-card').classList.add('selected');
+    selectedSubjectCard = 'maths';
+    document.getElementById('confirmSubjectBtn').onclick = () => {
+        currentSubject = selectedSubjectCard;
+        roadmapSubjectSpan.innerText = currentSubject.toUpperCase();
+        renderRoadmap();
+        subjectDiv.classList.add('hidden');
+        roadmapDiv.classList.remove('hidden');
+    };
+    document.getElementById('backToCharFromSubBtn').onclick = () => { subjectDiv.classList.add('hidden'); charDiv.classList.remove('hidden'); };
+    document.getElementById('exitRoadmapBtn').onclick = () => { roadmapDiv.classList.add('hidden'); welcomeDiv.classList.remove('hidden'); };
+    document.getElementById('resetRoadmapBtn').onclick = () => { if(confirm("Reset all progress?")) { progress[currentSubject] = { completedStages: [], bossDefeated: false }; saveProgress(); renderRoadmap(); } };
+    document.getElementById('fightExitBtn').onclick = () => { if(confirm("Exit battle?")) { fightDiv.classList.add('hidden'); roadmapDiv.classList.remove('hidden'); } };
+    document.getElementById('attackBtn').onclick = attack;
+    document.addEventListener('keydown', (e) => { if(e.key === 'Enter' && !fightDiv.classList.contains('hidden') && canAttack) { e.preventDefault(); attack(); } });
+    document.querySelectorAll('.char-card').forEach(c => c.addEventListener('click', function() { document.querySelectorAll('.char-card').forEach(crd=>crd.classList.remove('selected')); this.classList.add('selected'); }));
+</script>
+</body>
+</html>
